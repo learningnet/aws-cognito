@@ -59,7 +59,7 @@ class CognitoClientTest extends TestCase
         $this->cognitoIdentityProviderClientMock->expects(static::once())
             ->method('adminInitiateAuth')
             ->with([
-                'AuthFlow' => 'ADMIN_NO_SRP_AUTH',
+                'AuthFlow' => 'ADMIN_USER_PASSWORD_AUTH',
                 'AuthParameters' => [
                     'USERNAME' => $username,
                     'PASSWORD' => $password,
@@ -86,7 +86,7 @@ class CognitoClientTest extends TestCase
             'CUSTOM_CHALLENGE',
             'DEVICE_SRP_AUTH',
             'DEVICE_PASSWORD_VERIFIER',
-            'ADMIN_NO_SRP_AUTH',
+            'ADMIN_USER_PASSWORD_AUTH',
             'NEW_PASSWORD_REQUIRED',
         ];
         $challengeName = $this->faker->randomElement($availableChallengeNames);
