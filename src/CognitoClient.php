@@ -19,6 +19,7 @@ use pmill\AwsCognito\Exception\TokenVerificationException;
 class CognitoClient
 {
     const CHALLENGE_NEW_PASSWORD_REQUIRED = 'NEW_PASSWORD_REQUIRED';
+    const CHALLENGE_SOFTWARE_TOKEN_MFA = 'SOFTWARE_TOKEN_MFA';
 
     /**
      * @var string
@@ -148,6 +149,27 @@ class CognitoClient
             self::CHALLENGE_NEW_PASSWORD_REQUIRED,
             [
                 'NEW_PASSWORD' => $newPassword,
+                'USERNAME' => $username,
+                'SECRET_HASH' => $this->cognitoSecretHash($username),
+            ],
+            $session
+        );
+    }
+
+    /**
+     * @param string $username
+     * @param string $newPassword
+     * @param string $session
+     * @return array
+     * @throws ChallengeException
+     * @throws Exception
+     */
+    public function respondToSoftwareTokenMFAChallenge($username, $code, $session)
+    {
+        return $this->respondToAuthChallenge(
+            self::CHALLENGE_SOFTWARE_TOKEN_MFA,
+            [
+                'SOFTWARE_TOKEN_MFA_CODE' => $code,
                 'USERNAME' => $username,
                 'SECRET_HASH' => $this->cognitoSecretHash($username),
             ],
@@ -670,5 +692,67 @@ class CognitoClient
             ];
         }
         return $userAttributes;
+    }
+
+    /**
+     * Set User MFA Preference
+     *
+     * @return void
+     */
+    public function setUserMFAPreference(string $username, array $settings)
+    {
+        try {
+            $this->client->adminSetUserMFAPreference([
+                #'SMSMfaSettings' => [
+                #    'Enabled' => (!empty($settings['sms_enabled'])) ? true : false,
+                #    'PreferredMfa' => (!empty($settings['sms_preferred'])) ? true : false
+                #],
+                'SoftwareTokenMfaSettings' => [
+                    'Enabled' => (!empty($settings['totp_enabled'])) ? true : false,
+                    'PreferredMfa' => (!empty($settings['totp_preferred'])) ? true : false
+                ],
+                'UserPoolId' => $this->userPoolId,
+                'Username' => $username,
+            ]);
+        } catch (CognitoIdentityProviderException $e) {
+            throw CognitoResponseException::createFromCognitoException($e);
+        }
+    }
+
+    /**
+     * Get unique shared secret key code for TOTP MFA
+     *
+     * @return void
+     */
+    public function getUserMFATOTPSecretCode(string $accessToken)
+    {
+        try {
+            $response = $this->client->associateSoftwareToken([
+                'AccessToken' => $accessToken,
+            ]);
+
+            return $response;
+        } catch (CognitoIdentityProviderException $e) {
+            throw CognitoResponseException::createFromCognitoException($e);
+        }
+    }
+
+    /**
+     * Verify the TOTP for MFA
+     *
+     * @return bool
+     */
+    public function verifyTOTP(string $totp, string $accessToken): bool
+    {
+        try {
+            $response = $this->client->verifySoftwareToken([
+                'AccessToken' => $accessToken,
+                'UserCode' => $totp
+            ]);
+
+            return (!empty($response['Status']) and $response['Status'] === 'SUCCESS');
+        } catch (CognitoIdentityProviderException $e) {
+            throw CognitoResponseException::createFromCognitoException($e);
+        }
     }
 }
