@@ -22,7 +22,15 @@ class CognitoResponseException extends Exception
      */
     public static function createFromCognitoException(CognitoIdentityProviderException $e)
     {
-        $errorClass = "pmill\\AwsCognito\\Exception\\" . $e->getAwsErrorCode();
+        $awsErrorCode = $e->getAwsErrorCode();
+        $awsErrorMessage = $e->getAwsErrorMessage();
+
+        $errorClass = 'pmill\\AwsCognito\\Exception\\';
+        if ($awsErrorCode === 'NotAuthorizedException' and $awsErrorMessage === 'Access Token has expired') {
+            $errorClass .= 'AccessTokenExpiredException';
+        } else {
+            $errorClass .= $awsErrorCode;
+        }
 
         if (class_exists($errorClass)) {
             return new $errorClass($e);
