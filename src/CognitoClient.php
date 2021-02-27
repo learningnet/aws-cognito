@@ -231,7 +231,7 @@ class CognitoClient
      * @param string $username
      * @throws Exception
      */
-    public function confirmUserRegistration($confirmationCode, $username)
+    public function confirmUserRegistration($username, $confirmationCode)
     {
         try {
             $this->client->confirmSignUp([
