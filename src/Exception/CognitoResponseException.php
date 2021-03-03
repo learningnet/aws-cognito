@@ -26,8 +26,13 @@ class CognitoResponseException extends Exception
         $awsErrorMessage = $e->getAwsErrorMessage();
 
         $errorClass = 'pmill\\AwsCognito\\Exception\\';
-        if ($awsErrorCode === 'NotAuthorizedException' and $awsErrorMessage === 'Access Token has expired') {
-            $errorClass .= 'AccessTokenExpiredException';
+
+        if ($awsErrorCode === 'NotAuthorizedException') {
+            if (stristr($awsErrorMessage, 'Access Token has expired') !== false) {
+                $errorClass .= 'AccessTokenExpiredException';
+            } elseif (stristr($awsErrorMessage, 'Invalid Refresh Token') !== false) {
+                $errorClass .= 'InvalidRefreshTokenException';
+            }
         } else {
             $errorClass .= $awsErrorCode;
         }
