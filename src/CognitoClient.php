@@ -189,7 +189,6 @@ class CognitoClient
             $response = $this->client->adminInitiateAuth([
                 'AuthFlow' => 'REFRESH_TOKEN_AUTH',
                 'AuthParameters' => [
-                    'USERNAME' => $username,
                     'REFRESH_TOKEN' => $refreshToken,
                     'SECRET_HASH' => $this->cognitoSecretHash($username),
                 ],
