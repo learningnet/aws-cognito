@@ -62,6 +62,16 @@ class CognitoClient
     }
 
     /**
+     * Determines if given config is valid
+     *
+     * @return void
+     */
+    public static function isConfigValid($config)
+    {
+        return (!empty($config['app_client_id']) and !empty($config['app_client_secret']) and !empty($config['user_pool_id']) and !empty($config['region']));
+    }
+
+    /**
      * @param string $username
      * @param string $password
      *
